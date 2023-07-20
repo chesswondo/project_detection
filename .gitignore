@@ -1,0 +1,9 @@
+/.ipynb_checkpoints
+/Detection.ipynb
+/detection_env
+/Plan.txt
+/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8
+/ssd_resnet50_v1_fpn_640x640_coco17_tpu-8.tar.gz
+/Tkinter.ipynb
+/models/research/object_detection/test_data
+/models/research/object_detection/test_data/*
