@@ -16,7 +16,7 @@ import Tkinter.tkinter_parameters as tk_params
 
 def build_main_window():
 
-    #just a function which creates a window template with one label
+    #just a function that creates a window template with one label
 
     root = tk.Tk()
     root.title(tk_params.window.title)
@@ -47,7 +47,7 @@ def main_tkinter_menu():
     def click_button_list():
         print("List click")
     
-
+    #build a new window from the template, add several items
     root = build_main_window()
 
     label_2 = tk.Label(root, text="Choose the way to detect your objects", font=("Arial", 20))
@@ -67,6 +67,7 @@ def choose_folder_training():
     
     def click_button_folder_training():
         
+        #allows user to choose a folder and re-train the model
         directory = filedialog.askdirectory()
         if directory != "":
 
@@ -87,7 +88,7 @@ def choose_folder_training():
             root.destroy()
             finish_custom_detection(detection_model)
         
-        
+    #build a new window from the template, add several items
     root = build_main_window()
     
     label_2 = tk.Label(root, text="Choose the folder for training if you're ready", font=("Arial", 20))
@@ -104,13 +105,13 @@ def choose_folder_training():
 def finish_custom_detection(detection_model):
     
     def click_button_select_labelled():
+
+        #saves detections from the selected folder
         directory = filedialog.askdirectory()
         if directory != "":
 
             show_info_before()
-
             data.save_detections_from_folder(directory, params.category_index, detection_model)
-            
             show_info_after()
 
             root.destroy()
@@ -120,6 +121,7 @@ def finish_custom_detection(detection_model):
         root.destroy()
         view_tkinter_results()
     
+    #get predictions on a real-time broadcast
     def click_button_camera():
         
         # define a video capture object
@@ -134,6 +136,7 @@ def finish_custom_detection(detection_model):
             input_tensor = tf.convert_to_tensor(np.expand_dims(frame, axis=0), dtype=tf.float32)
             detections = model.detect(input_tensor, detection_model)
 
+            #visualize them
             viz_utils.visualize_boxes_and_labels_on_image_array(
                 frame,
                 detections['detection_boxes'][0].numpy(),
@@ -150,12 +153,10 @@ def finish_custom_detection(detection_model):
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-        # After the loop release the cap object
         vid.release()
-        # Destroy all the windows
         cv2.destroyAllWindows()
     
-    
+    #build a new window from the template, add several items
     root = build_main_window()
     
     label_2 = tk.Label(root, text="Choose the folder with labelled images or", font=("Arial", 20))
@@ -180,9 +181,11 @@ def finish_custom_detection(detection_model):
 
 def view_tkinter_results():
     
+    #open the selected folder in explorer (works on Windows)
     def click_button_view_results():
         os.startfile(r'.\media\out')
 
+    #build a new window from the template, add several items
     root = build_main_window()
     
     label_2 = tk.Label(root, text="Detecting was finished successfully!", font=("Arial", 20))

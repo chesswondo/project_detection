@@ -7,6 +7,20 @@ import Program.parameters as params
 
 def prepare_model_for_training(pipeline_config: str, checkpoint_path: str):
     
+    '''Prepare detection model for training
+
+    Changes the number of classes, restore checkpoints and
+    run a dummy image to generate model variables
+
+    Args:
+    pipeline_config: a path to the .config file for the model
+    checkpoint_path: a path to the checkpoint for the model
+    
+    Returns:
+    detection_model: prepared model for training
+    to_fine_tune: a list of layers that will be fine-tuned during training
+    '''
+
     tf.keras.backend.clear_session()
     
     # Load the configuration file into a dictionary
@@ -62,7 +76,7 @@ def prepare_model_for_training(pipeline_config: str, checkpoint_path: str):
 
     detection_model.provide_groundtruth(groundtruth_boxes_list=[], groundtruth_classes_list=[])
 
-    print('Weights restored!')
+    print('Weights restored')
     
     return detection_model, to_fine_tune
 
@@ -75,20 +89,21 @@ def train_step_fn(image_list,
                 model,
                 optimizer,
                 vars_to_fine_tune):
+    
     """A single training iteration.
 
     Args:
-      image_list: A list of [1, height, width, 3] Tensor of type tf.float32.
+      image_list: A list of (1, height, width, 3) Tensor of type tf.float32.
         Note that the height and width can vary across images, as they are
         reshaped within this function to be 640x640.
-      groundtruth_boxes_list: A list of Tensors of shape [N_i, 4] with type
+      groundtruth_boxes_list: A list of Tensors of shape (N_i, 4) with type
         tf.float32 representing groundtruth boxes for each image in the batch.
-      groundtruth_classes_list: A list of Tensors of shape [N_i, num_classes]
+      groundtruth_classes_list: A list of Tensors of shape (N_i, num_classes)
         with type tf.float32 representing groundtruth boxes for each image in
         the batch.
 
     Returns:
-      A scalar tensor representing the total loss for the input batch.
+      total_loss: a scalar tensor representing the total loss for the input batch.
     """
 
     with tf.GradientTape() as tape:
@@ -171,16 +186,17 @@ def train_the_model(images_np: list,
 
 @tf.function
 def detect(input_tensor, detection_model):
+    
     """Run detection on an input image.
 
     Args:
-    input_tensor: A [1, height, width, 3] Tensor of type tf.float32.
-      Note that height and width can be anything since the image will be
+    input_tensor: A (1, height, width, 3) tensor of type tf.float32.
+      Height and width can be anything since the image will be
       immediately resized according to the needs of the model within this
       function.
 
     Returns:
-    A dict containing 3 Tensors (`detection_boxes`, `detection_classes`,
+    A dict containing 3 tensors (`detection_boxes`, `detection_classes`,
       and `detection_scores`).
     """
     preprocessed_image, shapes = detection_model.preprocess(input_tensor)

@@ -12,6 +12,21 @@ import Program.parameters as params
 import Detector.model as model
 
 def process_training_folder(image_dir):
+
+    '''Process the selected folder and load images with boxes into separate lists of numpy arrays.
+
+    Looks up all .xml files in the given directory and parse them
+    to find image names and their box coordinates.
+    Then load images with their boxes into lists of arrays.
+
+    Args:
+    image_dir: a directory path
+
+    Returns:
+    images_np: a list of float numpy arrays with shape (img_height, img_width, 3)
+    boxes_np: a list of float numpy arrays that represent the boxes
+    '''
+
     image_dir = Path(image_dir)
     images_np = []
     boxes_np = []
@@ -42,6 +57,21 @@ def process_training_folder(image_dir):
 
 def prepping_data(images_np: list, boxes_np: list):
     
+    '''Do some data preprocessing before it is fed to the model
+    
+    Convert the class labels to one-hot representations.
+    Convert train images, gt boxes and class labels to tensors.
+
+    Args:
+    images_np: a list of images (numpy arrays with shape (img_height, img_width, 3))
+    boxes_np:  a list of boxes (also numpy arrays)
+
+    Returns:
+    image_tensors: a list of tensors of shape (1, img_height, img_width, 3)
+    classes_one_hot_tensors: a list of one-hot representations of class labels
+    box_tensors: a list of box tensors
+    '''
+
     image_tensors = []
 
     # lists containing the one-hot encoded classes and ground truth boxes
@@ -57,7 +87,7 @@ def prepping_data(images_np: list, boxes_np: list):
         # convert numpy array to tensor, then add to list
         box_tensors.append(tf.convert_to_tensor(box_np, dtype=tf.float32))
 
-        # apply offset to to have zero-indexed ground truth classes
+        # apply offset to have zero-indexed ground truth classes
         zero_indexed_groundtruth_classes = tf.convert_to_tensor(
             np.ones(shape=[box_np.shape[0]], dtype=np.int32) - params.settings.label_id_offset)
 
@@ -73,13 +103,31 @@ def prepping_data(images_np: list, boxes_np: list):
 
 
 def save_detections_from_folder(image_dir, category_index, detection_model):
+
+    '''Load images from the selected folder, make detections and save them
+    
+    Gets images from the selected folder, make detections on them,
+    then visualize them using special utilities and save to the another folder.
+
+    Args:
+    image_dir: a directory path
+    category_index: a dict containing category dictionaries (each holding
+          category index `id` and category name `name`) keyed by category indices. 
+    detection_model: a trained model that is ready to make detections
+
+    Returns: nothing.
+    '''
+
     image_dir = Path(image_dir)
     images_np = []
+
+    # load images from the selected folder
     for img_path in image_dir.glob("*.jpg"):
         print(img_path)
         images_np.append(np.expand_dims(
           draw_utils.load_image_into_numpy_array(img_path), axis=0))
     
+    # make detections and visualize them on the images
     for i in range(len(images_np)):
         input_tensor = tf.convert_to_tensor(images_np[i], dtype=tf.float32)
         detections = model.detect(input_tensor, detection_model)
@@ -92,6 +140,7 @@ def save_detections_from_folder(image_dir, category_index, detection_model):
                 use_normalized_coordinates=True,
                 min_score_thresh=params.hyperparameters.min_score_thresh)
         
+        # save detected images to the another folder
         print(f"detected_image_{i+1}.jpg")
         if not os.path.exists('./media'): os.mkdir('./media')
         if not os.path.exists('./media/out'): os.mkdir('./media/out')
